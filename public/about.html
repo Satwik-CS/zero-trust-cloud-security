@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About | Zero-Trust Sentinel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="fade-in">
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            Zero-Trust Sentinel
+        </div>
+        <div class="navbar-nav">
+            <a href="dashboard.html">Dashboard</a>
+            <a href="dashboard.html#logs">Logs</a>
+            <a href="about.html" class="active">About</a>
+            <a href="contact.html">Contact</a>
+        </div>
+        <div class="navbar-right">
+            <div class="cloud-status">CLOUD CONNECTED</div>
+            <button class="btn" id="themeToggle" style="padding: 5px 10px;">☀</button>
+            <div class="user-badge" id="userBadge">user</div>
+            <button class="btn" id="logoutBtn" style="padding: 5px 10px;">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 40px; max-width: 900px;">
+        <div class="text-center mb-2">
+            <h1 class="text-cyan mb-1" style="font-size: 2.5rem; font-family: var(--font-mono);">About Zero-Trust
+                Sentinel</h1>
+            <p class="text-muted" style="font-size: 1.1rem; line-height: 1.6;">
+                Zero-Trust Sentinel is a cloud-based security monitoring platform implementing
+                Zero-Trust Architecture principles. Built on Node.js, MongoDB Atlas, and JWT
+                authentication, it provides real-time threat detection, access control enforcement,
+                and live security telemetry for cloud environments.
+            </p>
+        </div>
+
+        <h2 class="mb-1" style="margin-top: 40px;">Core Principles</h2>
+        <div class="grid-cols-3">
+            <div class="glass-card">
+                <h3 class="text-cyan mb-1">Never Trust, Always Verify</h3>
+                <p class="text-muted" style="font-size: 0.9rem;">Every request must be authenticated and authorized,
+                    regardless of origin.</p>
+            </div>
+            <div class="glass-card">
+                <h3 class="text-cyan mb-1">Least Privilege Access</h3>
+                <p class="text-muted" style="font-size: 0.9rem;">Users are granted only the minimum permissions
+                    necessary to perform their tasks.</p>
+            </div>
+            <div class="glass-card">
+                <h3 class="text-cyan mb-1">Assume Breach Mentality</h3>
+                <p class="text-muted" style="font-size: 0.9rem;">Always operate under the assumption that the network
+                    has already been compromised.</p>
+            </div>
+        </div>
+
+        <h2 class="mb-1" style="margin-top: 40px;">Tech Stack</h2>
+        <div class="glass-card flex items-center justify-between flex-wrap" style="gap: 20px;">
+            <div class="text-center">
+                <div style="font-size: 2rem;">🟢</div>
+                <div class="text-muted" style="font-family: var(--font-mono); margin-top:5px;">Node.js</div>
+            </div>
+            <div class="text-center">
+                <div style="font-size: 2rem;">🍃</div>
+                <div class="text-muted" style="font-family: var(--font-mono); margin-top:5px;">MongoDB Atlas</div>
+            </div>
+            <div class="text-center">
+                <div style="font-size: 2rem;">🔑</div>
+                <div class="text-muted" style="font-family: var(--font-mono); margin-top:5px;">JWT Auth</div>
+            </div>
+            <div class="text-center">
+                <div style="font-size: 2rem;">🚄</div>
+                <div class="text-muted" style="font-family: var(--font-mono); margin-top:5px;">Express.js</div>
+            </div>
+        </div>
+    </div>
+    <h2 class="mb-1" style="margin-top: 40px;">Development Timeline</h2>
+    <div class="glass-card" style="display: flex; flex-direction: column; gap: 15px;">
+        <div class="flex items-center gap-2">
+            <div style="width: 15px; height: 15px; border-radius: 50%; background: var(--success);"></div>
+            <div><strong class="text-cyan">Phase 1:</strong> Architecture Design & Database Setup</div>
+        </div>
+        <div class="flex items-center gap-2">
+            <div style="width: 15px; height: 15px; border-radius: 50%; background: var(--success);"></div>
+            <div><strong class="text-cyan">Phase 2:</strong> API Implementation & Authentication</div>
+        </div>
+        <div class="flex items-center gap-2">
+            <div style="width: 15px; height: 15px; border-radius: 50%; background: var(--warning);"></div>
+            <div><strong class="text-cyan">Phase 3:</strong> Frontend Dashboard & Live Telemetry</div>
+        </div>
+        <div class="flex items-center gap-2">
+            <div style="width: 15px; height: 15px; border-radius: 50%; background: var(--border);"></div>
+            <div><strong class="text-cyan">Phase 4:</strong> Advanced Anomaly Detection & ML Integration</div>
+        </div>
+    </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

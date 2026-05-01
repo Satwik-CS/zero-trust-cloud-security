@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Zero-Trust Sentinel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <canvas id="login-bg"></canvas>
+
+    <div class="login-container fade-in">
+        <div class="glass-card login-card" id="loginCard">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-1">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <h1 class="mb-1" style="font-family: var(--font-mono);">Zero-Trust Sentinel</h1>
+            <p class="text-muted mb-2">Verify Identity Before Access</p>
+            
+            <form id="loginForm" class="flex" style="flex-direction: column; gap: 15px;">
+                <input type="text" id="username" class="input-field" placeholder="Username" required>
+                <input type="password" id="password" class="input-field" placeholder="Password" required>
+                <button type="submit" class="btn glow" style="width: 100%; margin-top: 10px;">Authenticate Identity</button>
+            </form>
+
+            <div id="errorMsg" class="text-red mt-2" style="display: none; margin-top: 15px; font-family: var(--font-mono); font-size: 0.9rem;">Authentication Failed</div>
+            <div id="warningMsg" class="text-warning mt-2" style="display: none; margin-top: 10px; color: var(--warning); font-size: 0.85rem;">⚠️ Multiple failed attempts detected. Account temporarily monitored.</div>
+
+            <div style="margin-top: 30px; font-size: 0.8rem; text-align: left; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 6px; border: 1px dashed var(--border);">
+                <strong class="text-cyan">Demo Credentials:</strong><br><br>
+                <span class="text-muted">admin / admin</span> &rarr; Full Access<br>
+                <span class="text-muted">user / user</span> &rarr; Restricted Access<br>
+                <span class="text-muted">guest / guest</span> &rarr; Public Only
+            </div>
+
+            <p style="margin-top: 30px; font-size: 0.7rem; color: var(--text-mut);">Secured by Zero-Trust Architecture | AES-256 | JWT Auth</p>
+        </div>
+    </div>
+
+    <script src="login.js"></script>
+</body>
+</html>

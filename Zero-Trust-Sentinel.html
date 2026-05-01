@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zero-Trust Sentinel | SOC Dashboard</title>
+  <style>
+    :root {
+      --bg-color: #050b14;
+      --panel-bg: rgba(17, 24, 39, 0.75);
+      --border-color: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.5);
+      --info: #10b981;
+      --info-glow: rgba(16, 185, 129, 0.5);
+      --warning: #f59e0b;
+      --warning-glow: rgba(245, 158, 11, 0.5);
+      --critical: #ef4444;
+      --critical-glow: rgba(239, 68, 68, 0.6);
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Fira Code', 'Consolas', ui-monospace, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-image:
+        radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.06), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.04), transparent 25%);
+    }
+
+    /* --- Navbar --- */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(10, 15, 30, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      letter-spacing: 0.5px;
+    }
+
+    .logo-icon {
+      color: var(--accent);
+      text-shadow: 0 0 12px var(--accent-glow);
+      font-size: 1.6rem;
+    }
+
+    .nav-center {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .clock {
+      font-family: var(--font-mono);
+      font-size: 1.05rem;
+      color: var(--accent);
+      text-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      background: rgba(30, 41, 59, 0.4);
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+    }
+
+    .user-name {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    button {
+      background: #1e293b;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    button:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+
+    button.action-btn {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    button.action-btn:hover {
+      background: #2563eb;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    /* --- Layout --- */
+    .container {
+      display: flex;
+      flex: 1;
+      padding: 1.5rem;
+      gap: 1.5rem;
+      max-width: 1920px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* --- Sidebar --- */
+    .sidebar {
+      width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    .panel h3 {
+      font-size: 0.95rem;
+      margin-bottom: 1.25rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 600;
+    }
+
+    /* Login Cards */
+    .user-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.85rem 1rem;
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .user-card:hover {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: var(--text-muted);
+    }
+
+    .user-card.active {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.1);
+      box-shadow: inset 0 0 10px rgba(59, 130, 246, 0.2), 0 0 10px var(--accent-glow);
+    }
+
+    /* Resource Cards */
+    .resource-card {
+      padding: 1.1rem;
+      background: rgba(30, 41, 59, 0.4);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .resource-card:hover {
+      border-color: var(--text-muted);
+      background: rgba(30, 41, 59, 0.8);
+    }
+
+    /* --- Main Content --- */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      min-width: 0;
+    }
+
+    /* Stats */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+    }
+
+    .stat-card:nth-child(1)::before {
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+    }
+
+    .stat-card:nth-child(2)::before {
+      background: var(--critical);
+      box-shadow: 0 0 12px var(--critical);
+    }
+
+    .stat-card:nth-child(3)::before {
+      background: var(--info);
+      box-shadow: 0 0 12px var(--info);
+    }
+
+    .stat-card:nth-child(4)::before {
+      background: var(--warning);
+      box-shadow: 0 0 12px var(--warning);
+    }
+
+    .stat-title {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Log Table */
+    .log-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .table-container {
+      overflow-y: auto;
+      flex: 1;
+      margin-top: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #0b1120;
+      padding: 1rem 1.25rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border-color);
+      z-index: 10;
+    }
+
+    td {
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.6);
+      vertical-align: middle;
+    }
+
+    tr {
+      transition: background 0.2s;
+    }
+
+    tr:hover {
+      background: rgba(30, 41, 59, 0.6);
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      color: #cbd5e1;
+      font-size: 0.85rem;
+    }
+
+    /* Badges */
+    .badge {
+      padding: 0.35rem 0.6rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-CRITICAL {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      box-shadow: 0 0 10px var(--critical-glow);
+    }
+
+    .badge-WARNING {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      box-shadow: 0 0 10px var(--warning-glow);
+    }
+
+    .badge-INFO {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      box-shadow: 0 0 10px var(--info-glow);
+    }
+
+    .badge-OPEN {
+      background: rgba(16, 185, 129, 0.1);
+      color: #6ee7b7;
+      border: 1px solid #10b981;
+    }
+
+    .badge-RESTRICTED {
+      background: rgba(245, 158, 11, 0.1);
+      color: #fcd34d;
+      border: 1px solid #f59e0b;
+    }
+
+    .badge-LOCKED {
+      background: rgba(239, 68, 68, 0.1);
+      color: #fca5a5;
+      border: 1px solid #ef4444;
+    }
+
+    .badge-LOCAL {
+      background: rgba(148, 163, 184, 0.1);
+      color: #cbd5e1;
+      border: 1px solid #94a3b8;
+    }
+
+    /* Cloud Icons */
+    .cloud-icon {
+      font-size: 1.1rem;
+    }
+
+    .cloud-synced {
+      color: #10b981;
+      text-shadow: 0 0 8px #10b981;
+    }
+
+    .cloud-syncing {
+      color: #f59e0b;
+      animation: pulse 1s infinite;
+    }
+
+    .cloud-failed {
+      color: #ef4444;
+      text-shadow: 0 0 8px #ef4444;
+    }
+
+    /* AI Panel */
+    .ai-panel {
+      min-height: 140px;
+      border-top: 2px solid rgba(16, 185, 129, 0.3);
+      box-shadow: inset 0 10px 30px rgba(16, 185, 129, 0.05);
+    }
+
+    .ai-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .ai-summary-box {
+      padding: 1rem;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.08);
+      border-radius: 8px;
+      color: #a7f3d0;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      box-shadow: inset 0 0 20px rgba(16, 185, 129, 0.05);
+    }
+
+    .ai-inline-analysis {
+      margin-top: 0.25rem;
+      margin-bottom: 0.5rem;
+      padding: 0.85rem 1rem;
+      border-left: 3px solid #10b981;
+      background: rgba(16, 185, 129, 0.08);
+      border-radius: 0 6px 6px 0;
+      color: #a7f3d0;
+      font-size: 0.85rem;
+      font-family: var(--font-sans);
+      white-space: normal;
+      line-height: 1.5;
+      box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.05);
+    }
+
+    .ai-inline-analysis strong {
+      color: #fff;
+      margin-right: 0.5rem;
+    }
+
+    .loading {
+      color: #6ee7b7;
+      animation: pulse 1.5s infinite;
+      font-weight: 500;
+    }
+
+    /* Modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 11, 20, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 1;
+      transition: opacity 0.3s;
+    }
+
+    .modal.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .modal-content {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      padding: 2.5rem;
+      border-radius: 16px;
+      width: 500px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal-content h2 {
+      margin-bottom: 1rem;
+      color: var(--text-main);
+      font-size: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.85rem;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      color: white;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+      background: rgba(15, 23, 42, 0.9);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 1rem;
+      margin-top: 2.5rem;
+    }
+
+    /* Animations */
+    @keyframes flashRed {
+      0% {
+        background-color: rgba(239, 68, 68, 0.8);
+        border-color: #ef4444;
+        box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+      }
+
+      100% {
+        background-color: rgba(30, 41, 59, 0.4);
+        border-color: var(--border-color);
+        box-shadow: none;
+      }
+    }
+
+    .flash-red {
+      animation: flashRed 0.6s ease-out;
+    }
+
+    @keyframes fadeInRow {
+      0% {
+        opacity: 0;
+        transform: translateX(-15px);
+        background: rgba(59, 130, 246, 0.25);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateX(0);
+        background: transparent;
+      }
+    }
+
+    .row-new {
+      animation: fadeInRow 0.6s ease-out forwards;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.4;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    .btn-sm {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 4px;
+    }
+
+    .btn-analyze {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-analyze:hover {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: #10b981;
+      box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="navbar">
+    <div class="logo">
+      <span class="logo-icon">⬡</span> Zero-Trust Sentinel
+    </div>
+    <div class="nav-center">
+      <div class="clock" id="clock">00:00:00 UTC</div>
+    </div>
+    <div class="nav-right">
+      <span id="cloud-status-badge" class="badge badge-LOCAL">LOCAL MODE</span>
+      <div class="user-info">
+        User: <span class="user-name" id="current-user-name">None</span>
+        <span class="badge badge-INFO" id="current-user-role" style="display:none; margin-left: 0.5rem;"></span>
+      </div>
+      <button onclick="toggleSettings()">⚙️ Atlas Config</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Left Sidebar -->
+    <aside class="sidebar">
+      <div class="panel">
+        <h3>Authentication</h3>
+        <div class="user-card" id="user-admin" onclick="login('ADMIN')">
+          <div>
+            <div style="font-weight: 600; font-size: 1.05rem;">Alice</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Role: Admin</div>
+          </div>
+          <span class="badge badge-INFO">Login</span>
+        </div>
+        <div class="user-card" id="user-analyst" onclick="login('ANALYST')">
+          <div>
+            <div style="font-weight: 600; font-size: 1.05rem;">Bob</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Role: Analyst</div>
+          </div>
+          <span class="badge badge-INFO">Login</span>
+        </div>
+        <div class="user-card" id="user-guest" onclick="login('GUEST')">
+          <div>
+            <div style="font-weight: 600; font-size: 1.05rem;">Charlie</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">Role: Guest</div>
+          </div>
+          <span class="badge badge-INFO">Login</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Protected Resources</h3>
+        <div class="resource-card" id="resource-PUBLIC" onclick="accessResource('PUBLIC')">
+          <div style="font-weight: 500;">Public Data</div>
+          <span class="badge badge-OPEN">OPEN</span>
+        </div>
+        <div class="resource-card" id="resource-USER" onclick="accessResource('USER')">
+          <div style="font-weight: 500;">User Data</div>
+          <span class="badge badge-RESTRICTED">RESTRICTED</span>
+        </div>
+        <div class="resource-card" id="resource-ADMIN" onclick="accessResource('ADMIN')">
+          <div style="font-weight: 500;">Admin Config</div>
+          <span class="badge badge-LOCKED">LOCKED</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Attack Simulation</h3>
+        <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+          <button onclick="simulateBruteForce()">Brute Force Simulation</button>
+          <button onclick="simulatePrivilegeEsc()">Privilege Escalation Attempt</button>
+          <button onclick="simulateSuspiciousIp()">Suspicious IP Burst</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-title">Total Events</span>
+          <span class="stat-value" style="color: var(--accent)" id="stat-total">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-title">Blocked Attempts</span>
+          <span class="stat-value" style="color: var(--critical)" id="stat-blocked">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-title">Successful Auths</span>
+          <span class="stat-value" style="color: var(--info)" id="stat-auths">0</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-title">Active Sessions</span>
+          <span class="stat-value" style="color: var(--warning)" id="stat-sessions">1</span>
+        </div>
+      </div>
+
+      <div class="panel log-panel">
+        <h3>Live Security Telemetry</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align: center;">☁️</th>
+                <th style="width: 110px;">Timestamp</th>
+                <th style="width: 100px;">Severity</th>
+                <th style="width: 140px;">User</th>
+                <th style="width: 120px;">Action</th>
+                <th style="width: 140px;">Resource</th>
+                <th style="width: 150px;">IP Address</th>
+                <th style="width: 120px;">AI Analysis</th>
+              </tr>
+            </thead>
+            <tbody id="log-body">
+              <!-- Logs rendered here via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel ai-panel">
+        <div class="ai-header">
+          <h3 style="margin-bottom: 0;">🤖 AI Threat Analyst</h3>
+          <button class="action-btn" style="background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981;"
+            onmouseover="this.style.background='#10b981'; this.style.color='#000';"
+            onmouseout="this.style.background='rgba(16, 185, 129, 0.2)'; this.style.color='#10b981';"
+            onclick="analyzeCriticalLogs()">
+            Analyze All Critical Logs
+          </button>
+        </div>
+        <div id="ai-batch-summary" style="color: var(--text-muted); font-size: 0.95rem; line-height: 1.5;">
+          Ready. Select individual logs to analyze or generate a batch report for critical incidents.
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Atlas Data API Settings Modal -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>Atlas Data API Setup</h2>
+      <p style="margin-bottom: 2rem; font-size: 0.95rem; color: var(--text-muted); line-height: 1.5;">
+        Connect to MongoDB Atlas to persist security logs globally. If fields are left empty, Sentinel runs purely in
+        local in-memory mode.
+      </p>
+      <div class="form-group">
+        <label>Data API URL Endpoint</label>
+        <input type="text" id="atlas-url" placeholder="https://data.mongodb-api.com/app/.../endpoint/data/v1" />
+      </div>
+      <div class="form-group">
+        <label>API Key</label>
+        <input type="password" id="atlas-key" placeholder="Atlas Data API Key" />
+      </div>
+      <div class="form-group">
+        <label>Database Name</label>
+        <input type="text" id="atlas-db" placeholder="zerotrust" />
+      </div>
+      <div class="form-group" style="margin-bottom: 0;">
+        <label>Cluster Name</label>
+        <input type="text" id="atlas-cluster" placeholder="Cluster0" />
+      </div>
+      <div class="modal-actions">
+        <button onclick="toggleSettings()">Cancel</button>
+        <button class="action-btn" onclick="saveSettings()">Save & Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Core Configuration & State ---
+    const ROLES = { ADMIN: 'Admin', ANALYST: 'Analyst', GUEST: 'Guest', NONE: 'System' };
+    const USERS = {
+      ADMIN: { name: 'Alice', role: ROLES.ADMIN },
+      ANALYST: { name: 'Bob', role: ROLES.ANALYST },
+      GUEST: { name: 'Charlie', role: ROLES.GUEST }
+    };
+    const RESOURCES = {
+      PUBLIC: { id: 'Public Data', requiredRole: ROLES.GUEST },
+      USER: { id: 'User Data', requiredRole: ROLES.ANALYST },
+      ADMIN: { id: 'Admin Config', requiredRole: ROLES.ADMIN }
+    };
+
+    const state = {
+      user: null,
+      logs: [],
+      atlas: {
+        url: localStorage.getItem('atlasUrl') || '',
+        key: localStorage.getItem('atlasKey') || '',
+        db: localStorage.getItem('atlasDb') || 'zerotrust',
+        cluster: localStorage.getItem('atlasCluster') || 'Cluster0'
+      },
+      sessions: Math.floor(Math.random() * 8) + 12
+    };
+
+    // --- Utility Functions ---
+    function getRandomIp(isInternal = false) {
+      if (isInternal) {
+        return `10.0.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+      }
+      return `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+    }
+
+    function formatTime(isoString) {
+      const d = new Date(isoString);
+      return d.toISOString().split('T')[1].substring(0, 12); // HH:MM:SS.mmm
+    }
+
+    // --- Timers & Background Simulation ---
+    setInterval(() => {
+      const d = new Date();
+      document.getElementById('clock').innerText = d.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+    }, 1000);
+
+    setInterval(() => {
+      // Random fluctuation of active sessions to simulate live network
+      if (Math.random() > 0.6) {
+        state.sessions += Math.random() > 0.5 ? 1 : -1;
+        if (state.sessions < 3) state.sessions = 3;
+        updateStats();
+      }
+    }, 3500);
+
+    // --- App Initialization ---
+    window.onload = () => {
+      updateCloudStatus();
+      if (state.atlas.url && state.atlas.key) {
+        fetchLogsFromAtlas();
+      } else {
+        // Local startup log
+        logEvent({ name: 'System', role: ROLES.NONE }, 'System Startup', { id: 'Dashboard UI' }, true, '127.0.0.1');
+      }
+    };
+
+    // --- Business Logic ---
+    function login(userKey) {
+      state.user = USERS[userKey];
+
+      // Update UI
+      document.querySelectorAll('.user-card').forEach(c => c.classList.remove('active'));
+      document.getElementById('user-' + userKey.toLowerCase()).classList.add('active');
+      document.getElementById('current-user-name').innerText = state.user.name;
+      const roleBadge = document.getElementById('current-user-role');
+      roleBadge.innerText = state.user.role;
+      roleBadge.style.display = 'inline-block';
+
+      logEvent(state.user, 'Login', { id: 'Auth Gateway' }, true, getRandomIp(true));
+    }
+
+    function checkAccess(role, resourceKey) {
+      if (role === ROLES.ADMIN) return true;
+      if (role === ROLES.ANALYST && (resourceKey === 'PUBLIC' || resourceKey === 'USER')) return true;
+      if (role === ROLES.GUEST && resourceKey === 'PUBLIC') return true;
+      return false;
+    }
+
+    function accessResource(resourceKey) {
+      if (!state.user) {
+        alert("Unauthorized: Please authenticate first via the login panel.");
+        return;
+      }
+
+      const resource = RESOURCES[resourceKey];
+      const allowed = checkAccess(state.user.role, resourceKey);
+      logEvent(state.user, 'Access Attempt', resource, allowed, getRandomIp(true));
+
+      if (!allowed) {
+        const card = document.getElementById('resource-' + resourceKey);
+        card.classList.remove('flash-red');
+        void card.offsetWidth; // Trigger DOM reflow to restart animation
+        card.classList.add('flash-red');
+      }
+    }
+
+    // --- Attack Simulations ---
+    async function simulateBruteForce() {
+      const ips = Array.from({ length: 5 }, () => getRandomIp());
+      for (let i = 0; i < 5; i++) {
+        logEvent({ name: 'Anonymous', role: ROLES.NONE }, 'Login Attempt', { id: 'Auth Gateway' }, false, ips[i]);
+        await new Promise(resolve => setTimeout(resolve, 180));
+      }
+    }
+
+    async function simulatePrivilegeEsc() {
+      logEvent(USERS.GUEST, 'Access Attempt', RESOURCES.ADMIN, false, getRandomIp(true));
+    }
+
+    async function simulateSuspiciousIp() {
+      const maliciousIp = `185.${Math.floor(Math.random() * 255)}.44.12`;
+      for (let i = 0; i < 8; i++) {
+        logEvent({ name: 'Anonymous', role: ROLES.NONE }, 'Access Attempt', RESOURCES.PUBLIC, true, maliciousIp);
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+
+    // --- Central Logging Engine ---
+    function logEvent(user, action, resource, allowed, ip) {
+      let severity = 'INFO';
+      if (!allowed) {
+        severity = (resource.id === 'Admin Config') ? 'CRITICAL' : 'WARNING';
+      }
+
+      const logEntry = {
+        id: crypto.randomUUID(),
+        timestamp: new Date().toISOString(),
+        severity,
+        user: user.name,
+        role: user.role,
+        action,
+        resource: resource.id,
+        ip,
+        allowed,
+        aiAnalysis: null,
+        syncStatus: (state.atlas.url && state.atlas.key) ? 'syncing' : 'local'
+      };
+
+      // Insert at beginning, limit array size
+      state.logs.unshift(logEntry);
+      if (state.logs.length > 50) state.logs.pop();
+
+      renderLogs(logEntry.id);
+      updateStats();
+
+      if (logEntry.syncStatus === 'syncing') {
+        pushLogToAtlas(logEntry);
+      }
+    }
+
+    // --- MongoDB Atlas Data API Integration ---
+    async function pushLogToAtlas(log) {
+      try {
+        const res = await fetch(`${state.atlas.url}/action/insertOne`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'api-key': state.atlas.key },
+          body: JSON.stringify({
+            dataSource: state.atlas.cluster,
+            database: state.atlas.db,
+            collection: "logs",
+            document: log
+          })
+        });
+        if (res.ok) {
+          log.syncStatus = 'synced';
+        } else {
+          log.syncStatus = 'failed';
+          console.error("Atlas write failed:", await res.text());
+        }
+      } catch (e) {
+        log.syncStatus = 'failed';
+        console.error("Atlas connection error:", e);
+      }
+      renderLogs();
+    }
+
+    async function fetchLogsFromAtlas() {
+      try {
+        const res = await fetch(`${state.atlas.url}/action/find`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'api-key': state.atlas.key },
+          body: JSON.stringify({
+            dataSource: state.atlas.cluster,
+            database: state.atlas.db,
+            collection: "logs",
+            sort: { timestamp: -1 },
+            limit: 50
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.documents) {
+            state.logs = data.documents;
+            state.logs.forEach(l => l.syncStatus = 'synced');
+            renderLogs();
+            updateStats();
+          }
+        }
+      } catch (e) {
+        console.error("Failed to fetch logs from Atlas", e);
+      }
+    }
+
+    // --- Anthropic AI Threat Analysis ---
+    async function analyzeLog(id) {
+      const log = state.logs.find(l => l.id === id);
+      if (!log) return;
+
+      log.aiAnalysis = "Analyzing...";
+      renderLogs();
+
+      const prompt = `You are a SOC L1 analyst. Given this security log entry, write a 2-3 sentence plain-English threat summary explaining what happened, the likely intent, and the risk level. Be concise and professional.\n\nLog Details:\n${JSON.stringify({
+        timestamp: log.timestamp, severity: log.severity, user: log.user, role: log.role, action: log.action, resource: log.resource, ip: log.ip, access_granted: log.allowed
+      }, null, 2)}`;
+
+      try {
+        // Standard artifact fetch (No custom Auth headers, relies on environment proxy if applicable)
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerously-allow-browser': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-haiku-20240307',
+            max_tokens: 150,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          log.aiAnalysis = data.content[0].text;
+        } else {
+          const errorData = await res.text();
+          console.error("Anthropic Error:", errorData);
+          log.aiAnalysis = "Error: Anthropic API request failed. (Auth/CORS).";
+        }
+      } catch (e) {
+        console.error("Network Error:", e);
+        log.aiAnalysis = "Error: Network issue reaching Anthropic.";
+      }
+      renderLogs();
+    }
+
+    async function analyzeCriticalLogs() {
+      const criticals = state.logs.filter(l => l.severity === 'CRITICAL');
+      const summaryBox = document.getElementById('ai-batch-summary');
+
+      if (criticals.length === 0) {
+        summaryBox.innerHTML = "<span style='color: var(--info)'>✓ No CRITICAL logs present in current session to analyze. System secure.</span>";
+        return;
+      }
+
+      summaryBox.innerHTML = '<span class="loading">Generating comprehensive batch threat report...</span>';
+
+      const prompt = `You are a SOC L1 analyst. Summarize these critical incidents briefly and state the overall risk level for the system. Point out any patterns.\n\nCritical Logs:\n${JSON.stringify(criticals.map(l => ({ user: l.user, action: l.action, resource: l.resource, ip: l.ip })), null, 2)}`;
+
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerously-allow-browser': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-haiku-20240307',
+            max_tokens: 250,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          summaryBox.innerHTML = `<div class="ai-summary-box"><strong>Executive Threat Summary:</strong><br/>${data.content[0].text.replace(/\n/g, '<br/>')}</div>`;
+        } else {
+          summaryBox.innerHTML = "<span class='cloud-failed'>Error: Unable to fetch analysis from Anthropic.</span>";
+        }
+      } catch (e) {
+        summaryBox.innerHTML = "<span class='cloud-failed'>Error: Network issue or CORS block.</span>";
+      }
+    }
+
+    // --- UI Rendering ---
+    function renderLogs(newId = null) {
+      const tbody = document.getElementById('log-body');
+      tbody.innerHTML = '';
+
+      state.logs.forEach(log => {
+        // Main Log Row
+        const tr = document.createElement('tr');
+        if (log.id === newId) tr.classList.add('row-new');
+
+        let cloudIcon = '☁️';
+        let cloudClass = 'cloud-icon';
+        if (log.syncStatus === 'synced') { cloudIcon = '☁️'; cloudClass += ' cloud-synced'; tr.title = 'Saved to Atlas'; }
+        else if (log.syncStatus === 'syncing') { cloudIcon = '↻'; cloudClass += ' cloud-syncing'; tr.title = 'Syncing...'; }
+        else if (log.syncStatus === 'failed') { cloudIcon = '⚠️'; cloudClass += ' cloud-failed'; tr.title = 'Atlas sync failed'; }
+        else { cloudIcon = '🏠'; cloudClass += ' cloud-local'; tr.title = 'Local only'; }
+
+        let analysisCell = '';
+        if (log.aiAnalysis && log.aiAnalysis !== 'Analyzing...') {
+          analysisCell = `<div><button class="btn-sm btn-analyze" onclick="analyzeLog('${log.id}')">↻ Refresh</button></div>`;
+        } else if (log.aiAnalysis === 'Analyzing...') {
+          analysisCell = `<span class="loading" style="font-size:0.8rem">Analyzing...</span>`;
+        } else {
+          analysisCell = `<button class="btn-sm btn-analyze" onclick="analyzeLog('${log.id}')">Analyze</button>`;
+        }
+
+        tr.innerHTML = `
+        <td style="text-align: center;"><span class="${cloudClass}">${cloudIcon}</span></td>
+        <td class="mono">${formatTime(log.timestamp)}</td>
+        <td><span class="badge badge-${log.severity}">${log.severity}</span></td>
+        <td><div style="font-weight: 500">${log.user}</div><div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;">${log.role}</div></td>
+        <td>${log.action}</td>
+        <td>${log.resource}</td>
+        <td class="mono">${log.ip}</td>
+        <td>${analysisCell}</td>
+      `;
+        tbody.appendChild(tr);
+
+        // Inline Analysis Details Row
+        if (log.aiAnalysis && log.aiAnalysis !== 'Analyzing...') {
+          const trAnalysis = document.createElement('tr');
+          if (log.id === newId) trAnalysis.classList.add('row-new');
+          trAnalysis.innerHTML = `
+          <td style="border-bottom: 1px solid rgba(30, 41, 59, 0.6);"></td>
+          <td colspan="7" style="padding-top: 0; border-bottom: 1px solid rgba(30, 41, 59, 0.6);">
+            <div class="ai-inline-analysis"><strong>AI Analyst:</strong> ${log.aiAnalysis}</div>
+          </td>
+        `;
+          tbody.appendChild(trAnalysis);
+        }
+      });
+    }
+
+    function updateStats() {
+      document.getElementById('stat-total').innerText = state.logs.length;
+      document.getElementById('stat-blocked').innerText = state.logs.filter(l => !l.allowed).length;
+      document.getElementById('stat-auths').innerText = state.logs.filter(l => l.action.includes('Login') && l.allowed).length;
+      document.getElementById('stat-sessions').innerText = state.sessions;
+    }
+
+    // --- Settings & Configuration UI ---
+    function toggleSettings() {
+      const modal = document.getElementById('settings-modal');
+      if (modal.classList.contains('hidden')) {
+        document.getElementById('atlas-url').value = state.atlas.url;
+        document.getElementById('atlas-key').value = state.atlas.key;
+        document.getElementById('atlas-db').value = state.atlas.db;
+        document.getElementById('atlas-cluster').value = state.atlas.cluster;
+        modal.classList.remove('hidden');
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function saveSettings() {
+      state.atlas.url = document.getElementById('atlas-url').value.trim();
+      state.atlas.key = document.getElementById('atlas-key').value.trim();
+      state.atlas.db = document.getElementById('atlas-db').value.trim() || 'zerotrust';
+      state.atlas.cluster = document.getElementById('atlas-cluster').value.trim() || 'Cluster0';
+
+      localStorage.setItem('atlasUrl', state.atlas.url);
+      localStorage.setItem('atlasKey', state.atlas.key);
+      localStorage.setItem('atlasDb', state.atlas.db);
+      localStorage.setItem('atlasCluster', state.atlas.cluster);
+
+      toggleSettings();
+      updateCloudStatus();
+
+      if (state.atlas.url && state.atlas.key) {
+        fetchLogsFromAtlas();
+      }
+    }
+
+    function updateCloudStatus() {
+      const badge = document.getElementById('cloud-status-badge');
+      if (state.atlas.url && state.atlas.key) {
+        badge.className = 'badge badge-INFO';
+        badge.innerText = 'CLOUD CONNECTED';
+      } else {
+        badge.className = 'badge badge-LOCAL';
+        badge.innerText = 'LOCAL MODE';
+      }
+    }
+  </script>
+</body>
+
+</html>
