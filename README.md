@@ -32,6 +32,33 @@ Zero Trust/
 └── server.js            # API Gateway & Server
 ```
 
+## 📸 Screenshots
+
+### 🔐 Login
+<p align="center">
+  <img src="Screenshots/Login.png" width="700"/>
+</p>
+
+### 📊 Dashboard
+<p align="center">
+  <img src="Screenshots/Dashboard.png" width="700"/>
+</p>
+
+### 📜 Logs Monitoring
+<p align="center">
+  <img src="Screenshots/Logs.png" width="700"/>
+</p>
+
+### ℹ️ About
+<p align="center">
+  <img src="Screenshots/About.png" width="700"/>
+</p>
+
+### 📞 Contact
+<p align="center">
+  <img src="Screenshots/Contact.png" width="700"/>
+</p>
+
 ## 🛠️ Setup & Cloud Integration
 
 1.  **Install Dependencies**:
